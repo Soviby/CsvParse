@@ -4,7 +4,7 @@ using System.Text;
 using System.IO;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
-
+using UnityEngine;
 
 public class CsvHelper
 {
@@ -102,61 +102,29 @@ public class CsvHelper
         List<List<string>> csvInfoList = new List<List<string>>();
         Regex regex = new Regex(@"\r\n");
         string[] infoLines = regex.Split(csvInfo);
-        List<string>[] itemListArray = new List<string>[0];
-        for (int i = 0, length = infoLines.Length; i < length; i++)
+        List<string> itemList = null;
+        try
         {
-            if (string.IsNullOrEmpty(infoLines[i]))
+            //每一行进行解析   
+            for (int i = 0, length = infoLines.Length; i < length; i++)
             {
-                continue;
-            }
-            string[] lineInfoArray = infoLines[i].Split(',');
-            List<string> rowItemList = new List<string>();
-            string strTemp = string.Empty;
-            for (int j = 0; j < lineInfoArray.Length; j++)
-            {
-                strTemp += lineInfoArray[j];
-                if (_isOddDoubleQuota(strTemp))
+                if (string.IsNullOrEmpty(infoLines[i]))
                 {
-                    if (j != lineInfoArray.Length - 1)
-                    {
-                        strTemp += ",";
-                    }
+                    continue;
                 }
-                else
+                itemList= new List<string>();
+                string[] lineInfoArray = infoLines[i].Split(',');//这里没有处理字符串
+                for (int j = 0; j < lineInfoArray.Length; j++)
                 {
-                    if (strTemp.StartsWith("\"") && strTemp.EndsWith("\""))
-                    {
-                        strTemp = strTemp.Substring(1, strTemp.Length - 2);
-                    }
-                    rowItemList.Add(strTemp);
-                    strTemp = string.Empty;
+                    itemList.Add(lineInfoArray[j]);
                 }
-            }
-            if (i == 0)
-            {
-                itemListArray = new List<string>[rowItemList.Count];
-                for (int temp = 0; temp < itemListArray.Length; temp++)
-                {
-                    itemListArray[temp] = new List<string>();
-                }
-            }
-            int indexTemp = 0;
-            for (; indexTemp < rowItemList.Count; indexTemp++)
-            {
-                if (indexTemp == itemListArray.Length)
-                {
-                    throw new ArgumentException("csv文件有误");
-                }
-                itemListArray[indexTemp].Add(rowItemList[indexTemp]);
-            }
-            if (indexTemp < itemListArray.Length - 1)
-            {
-                throw new ArgumentException("csv文件有误");
+                csvInfoList.Add(itemList);
             }
         }
-        for (int i = 0; i < itemListArray.Length; i++)
+        catch (Exception e)
         {
-            csvInfoList.Add(itemListArray[i]);
+            if(e!=null)
+                Debug.LogError(e.Message+","+e.Data);
         }
         return csvInfoList;
     }

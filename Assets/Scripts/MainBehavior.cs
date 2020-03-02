@@ -7,25 +7,15 @@ using UnityEngine;
 
 public  class MainBehavior :MonoBehaviour
 {
-    static string path = Application.streamingAssetsPath+@"/demo.csv";
+    static string path = Application.streamingAssetsPath+ @"/DemoBase.csv";
 
 
     private void OnGUI()
     {
         if (GUILayout.Button("解析"))
         {
-            
-            var list = CsvHelper.AnalysisCsvListByFile(path);
 
-            foreach (var item in list)
-            {
-                Debug.Log("------");
-                foreach (var value in item)
-                {
-                    Debug.Log(value);
-                }
-                Debug.Log("------");
-            }
+            StartCoroutine(DB.ParseAndInitCsvData(path));
         }
     }
 }

@@ -10,7 +10,8 @@ using UnityEngine;
 
 static class DB
 {
-    public static List<TestBase> TestBaseList = new List<TestBase>();
+    public static List<DemoBase> DemoBaseList = new List<DemoBase>();
+    public static Dictionary<int,DemoBase> DemoBaseMap = new Dictionary<int,DemoBase>();
 
 
 
@@ -22,7 +23,7 @@ static class DB
         return name;
     }
 
-    public static IEnumerator ParseAndInitCsvData(string rel_pathname, byte[] data) {
+    public static IEnumerator ParseAndInitCsvData(string rel_pathname) {
         string type_name = GetCsvTypeName(rel_pathname);
         var list_filed = typeof(DB).GetField(type_name+"List");
         var map_field = typeof(DB).GetField(type_name+"Map");
@@ -35,7 +36,8 @@ static class DB
             data_list.Clear();
             //yield return Sta
             var t = Task.Run(async () => {
-                await CsvUtils.Deserialize(data, "Entity." + type_name, data_type, data_list);
+                await CsvUtils.DeserializeAsync(CsvHelper.AnalysisCsvListByFile(rel_pathname)
+                    , "Entity." + type_name, data_type, data_list);
             });
             while (!t.IsCompleted)
             {

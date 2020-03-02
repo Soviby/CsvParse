@@ -12,25 +12,26 @@ public static class CsvUtils
 {
     public static int TITLE_LINE_IDX = 1;
     public static int BREAK_COUNT_FOR_LINE = 200;
-    /// <summary>
-    /// 解析CSV，填充list
-    /// </summary>
-    /// <param name="data"></param>
-    /// <param name="typename"></param>
-    /// <param name="scType"></param>
-    /// <param name="ret"></param>
-    /// <returns></returns>
-    public static async Task Deserialize(byte[] data,string typename ,Type csType, IList ret) {
-        string text ="";
-        var t = Task.Run(async() => {
-            await DeserializeAsync(text,typename,csType,ret);
-        });
-        await t;
-    }
+    ///// <summary>
+    ///// 解析CSV，填充list
+    ///// </summary>
+    ///// <param name="data"></param>
+    ///// <param name="typename"></param>
+    ///// <param name="scType"></param>
+    ///// <param name="ret"></param>
+    ///// <returns></returns>
+    //public static async Task Deserialize(byte[] data,string typename ,Type csType, IList ret) {
+    //    string text ="";
+    //    var t = Task.Run(async() => {
+    //        await DeserializeAsync(text,typename,csType,ret);
+    //    });
+    //    await t;
+    //}
 
-    static async Task DeserializeAsync(string text,string typename,Type csType,IList ret) {
-        List<List<string>> lint_list = new List<List<string>>();
+    public static async Task DeserializeAsync(List<List<string>> datas, string typename,Type csType,IList ret) {
         //解析整个文件
+        List<List<string>> lint_list = datas;
+        
 
         if (lint_list == null || lint_list.Count <= TITLE_LINE_IDX + 1) return;
         Type type = csType;
@@ -138,6 +139,49 @@ public static class CsvUtils
                 return ret;
             else
                 return 0f;
+        }
+        if (type == typeof(uint))
+        {
+            uint ret = 0;
+            if (string.IsNullOrEmpty(value)) return ret;
+
+            if (value.Contains(".")) value = value.Substring(0, value.IndexOf('.'));
+            if (uint.TryParse(value, out ret))
+                return ret;
+            else
+                return 0;
+        }
+        if (type == typeof(long))
+        {
+            long ret = 0;
+            if (string.IsNullOrEmpty(value)) return ret;
+
+            if (value.Contains(".")) value = value.Substring(0, value.IndexOf('.'));
+            if (long.TryParse(value, out ret))
+                return ret;
+            else
+                return 0L;
+        }
+        if (type == typeof(ulong))
+        {
+            ulong ret = 0;
+            if (string.IsNullOrEmpty(value)) return ret;
+
+            if (value.Contains(".")) value = value.Substring(0, value.IndexOf('.'));
+            if (ulong.TryParse(value, out ret))
+                return ret;
+            else
+                return 0L;
+        }
+        if (type == typeof(byte))
+        {
+            byte ret = 0;
+            if (string.IsNullOrEmpty(value)) return ret;
+            
+            if (byte.TryParse(value, out ret))
+                return ret;
+            else
+                return 0;
         }
         throw new NotSupportedException(string.Format("类型转换错误！ type:{0},value:{1}",type,value));
     }
