@@ -66,8 +66,16 @@ static class DB
 
                 }
             }
-
         }
+        Test();
+    }
+    static void Test() {
+        DemoBaseList.ForEach(a=>Debug.Log($"{ a.id},{ a.name},{ a.num}"));
+        foreach (var item in DemoBaseMap)
+        {
+            Debug.Log($"{ item.Key}---{item.Value.id},{item.Value.name},{ item.Value.num}");
+        }
+
     }
 }
 

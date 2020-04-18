@@ -8,144 +8,98 @@ using UnityEngine;
 
 public class CsvHelper
 {
-    /// <summary>
-    /// 字符串是否包含奇数个引号
-    /// </summary>
-    /// <param name="str">相关字符串</param>
-    /// <returns></returns>
-    private static bool _isOddDoubleQuota(string str)
-    {
-        return _getDoubleQuotaCount(str) % 2 == 1;
-    }
+    public static void PaseAllDate(string text , ref List<List<string >> result) {
+        if (result == null) result = new List<List<string>>();
+        if (text == null) return;
 
-    private static int _getDoubleQuotaCount(string str)
-    {
-        string[] strArray = str.Split('"');
-        int doubleQuotaCount = strArray.Length - 1;
-        doubleQuotaCount = doubleQuotaCount < 0 ? 0 : doubleQuotaCount;
-        return doubleQuotaCount;
-    }
+        List<string> line = new List<string>();//当前行
+        char[] chars = text.ToCharArray();//所有字符
+        int length = chars.Length;//总字符长度
 
-    /**
-     * csv的每一行的每一项的引号个数必定为偶数
-　　　* 生成的Dictionary<string,List<string>>以每一列的第一行元素作为key,其它元素的集合作为value
-     */
-    public static Dictionary<string, List<string>> AnalysisCsvByStr(string csvInfo)
-    {
-        //首行的每列数据项作为字典的Key
-        Dictionary<string, List<string>> csvInfoDic = new Dictionary<string, List<string>>();
-        Regex regex = new Regex(@"\r\n");
-        string[] infoLines = regex.Split(csvInfo);
-        List<string>[] itemListArray = new List<string>[0];
-        for (int i = 0, length = infoLines.Length; i < length; i++)
+        StringBuilder filed = new StringBuilder();//当前字段
+        bool isInQutation = false;//在双引号中
+        bool isStarFiled = true;//是否是字段的开始
+
+        for (int i = 0; i < length; i++)
         {
-            if (string.IsNullOrEmpty(infoLines[i]))
+            char ch = chars[i];
+            //在双引号内
+            if (isInQutation)
             {
-                continue;
-            }
-            string[] lineInfoArray = infoLines[i].Split(',');
-            List<string> rowItemList = new List<string>();
-            string strTemp = string.Empty;
-            for (int j = 0; j < lineInfoArray.Length; j++)
-            {
-                strTemp += lineInfoArray[j];
-                if (_isOddDoubleQuota(strTemp))
+                if (ch == '"')
                 {
-                    if (j != lineInfoArray.Length - 1)
+                    //连续2个"，则转义一个"
+                    if (i < length - 1 && chars[i + 1] == '"')
                     {
-                        strTemp += ",";
+                        filed.Append('"');
+                        i++;
                     }
-                }
+                    else//结束字符串模式
+                    {
+                        isInQutation = false;
+                    }
+
+                }//否则都加入到当前字段
                 else
                 {
-                    if (strTemp.StartsWith("\"") && strTemp.EndsWith("\""))
-                    {
-                        strTemp = strTemp.Substring(1, strTemp.Length - 2);
-                    }
-                    rowItemList.Add(strTemp);
-                    strTemp = string.Empty;
+                    filed.Append(ch);
                 }
             }
-            if (i == 0)
-            {
-                itemListArray = new List<string>[rowItemList.Count];
-                for (int temp = 0; temp < itemListArray.Length; temp++)
-                {
-                    itemListArray[temp] = new List<string>();
+            else {
+                switch (ch) {
+                    case '"':
+                        if (isStarFiled)
+                            isInQutation = true;
+                        else
+                            filed.Append(ch);
+                        break;
+                    case ','://结束一个字段
+                        line.Add(filed.ToString());//添加当前行
+                        filed.Length = 0;//清空字段
+                        isStarFiled = true;//开始新字段
+                        break;
+                    case '\r':
+                    case '\n':
+                        if (filed.Length > 0 || isStarFiled)//如果有字段则加入
+                        {
+                            line.Add(filed.ToString());
+                            filed.Length = 0;
+                        }
+                        if (line.Count > 0)//如果改行非空，则加入结果
+                        {
+                            result.Add(line);
+                            line = new List<string>();
+                        }
+                        isStarFiled = true;
+                        if (i < length - 1 && chars[i + 1] == '\n')//跳过\r\n
+                            i++;
+                        break;
+                    default://默认加到字段
+                        isStarFiled = false;
+                        filed.Append(ch);
+                        break;
                 }
-            }
-            int indexTemp = 0;
-            for (; indexTemp < rowItemList.Count; indexTemp++)
-            {
-                if (indexTemp == itemListArray.Length)
-                {
-                    throw new ArgumentException("csv文件有误");
-                }
-                itemListArray[indexTemp].Add(rowItemList[indexTemp]);
-            }
-            if (indexTemp < itemListArray.Length - 1)
-            {
-                throw new ArgumentException("csv文件有误");
             }
         }
-        for (int i = 0; i < itemListArray.Length; i++)
-        {
-            string key = itemListArray[i][0];
-            //去除第一个元素，其它元素集合作为value
-            itemListArray[i].RemoveAt(0);
-            csvInfoDic.Add(key, itemListArray[i]);
-        }
-        return csvInfoDic;
+        //如果有数据（isInFiled标记）则加入，否则空的单元格是没有意义的
+        if (filed.Length > 0 || isStarFiled && line.Count > 0)
+            line.Add(filed.ToString());
+        //非空行，则加入
+        if (line.Count > 0)
+            result.Add(line);
+
+        if (result.Count == 0) result = null;
     }
-    public static List<List<string>> AnalysisCsvListByStr(string csvInfo)
-    {
-        List<List<string>> csvInfoList = new List<List<string>>();
-        Regex regex = new Regex(@"\r\n");
-        string[] infoLines = regex.Split(csvInfo);
-        List<string> itemList = null;
-        try
-        {
-            //每一行进行解析   
-            for (int i = 0, length = infoLines.Length; i < length; i++)
-            {
-                if (string.IsNullOrEmpty(infoLines[i]))
-                {
-                    continue;
-                }
-                itemList= new List<string>();
-                string[] lineInfoArray = infoLines[i].Split(',');//这里没有处理字符串
-                for (int j = 0; j < lineInfoArray.Length; j++)
-                {
-                    itemList.Add(lineInfoArray[j]);
-                }
-                csvInfoList.Add(itemList);
-            }
-        }
-        catch (Exception e)
-        {
-            if(e!=null)
-                Debug.LogError(e.Message+","+e.Data);
-        }
-        return csvInfoList;
-    }
-    public static Dictionary<string, List<string>> AnalysisCsvByFile(string csvPath)
-    {
-        if (File.Exists(csvPath))
-        {
-            string csvInfo = File.ReadAllText(csvPath, Encoding.UTF8);
-            return AnalysisCsvByStr(csvInfo);
-        }
-        else
-        {
-            throw new FileNotFoundException("未找到文件：" + csvPath);
-        }
-    }
+
+
     public static List<List<string>> AnalysisCsvListByFile(string csvPath)
     {
         if (File.Exists(csvPath))
         {
             string csvInfo = File.ReadAllText(csvPath, Encoding.UTF8);
-            return AnalysisCsvListByStr(csvInfo);
+            List<List<string>> result = new List<List<string>>();
+            PaseAllDate(csvInfo, ref result);
+            return result;
         }
         else
         {

@@ -183,6 +183,7 @@ public static class CsvUtils
             else
                 return 0;
         }
+
         throw new NotSupportedException(string.Format("类型转换错误！ type:{0},value:{1}",type,value));
     }
 }
