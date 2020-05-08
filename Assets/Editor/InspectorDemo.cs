@@ -50,12 +50,13 @@ public class InspectorDemo : Editor
             foreach (var item_info in item_fieldInfos)
             {
                 var item_field_obj = item_info.GetValue(field_obj);//组件中的字段
-                FieldHandle(item_field_obj, item_info);
+                FieldHandle(ref item_field_obj, item_info);
+                item_info.SetValue(field_obj, item_field_obj);
             }
         }
     }
 
-    void FieldHandle(object obj, FieldInfo fieldInfo) {
+    void FieldHandle(ref object obj, FieldInfo fieldInfo) {
         var type = obj.GetType();
         if (type == typeof(string))
         {
